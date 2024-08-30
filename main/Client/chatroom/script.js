@@ -4,6 +4,8 @@ const socket = io('http://localhost:3000');
 const messageContainer = document.getElementById("message-container");
 const messageForm = document.getElementById("send-container");
 const messageInput = document.getElementById("message-input");
+const loginContainer = document.getElementById("login-container");
+const loginButton = document.getElementById("login-button");
 
 let name = null;
 
@@ -58,6 +60,13 @@ messageForm.addEventListener("submit", e => {
     socket.emit("sendChatMessage", message);
     appendMessage({userId: userId, userName: userName, message: message});
     messageInput.value = "";
+})
+
+loginButton.addEventListener("click", () => {
+    userId = socket.id;
+    userName = name;
+    console.log(`${returnCurrentTime()}: Login button clicked. . Redirecting user "${userName}" with id "${userId}" to login page`);
+    window.location.href = "login.html";
 })
 
 function appendMessage(data){

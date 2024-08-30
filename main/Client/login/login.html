@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script defer src="loginScript.js"></script>
+    <style>
+        body {
+            display: flex;
+        }
+
+        #loginContainer {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #nameDiv, #passwordDiv {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        #buttonDiv {
+            top: 100px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        #nameText, #passwordText {
+            width: 100%;
+            margin: 5px;
+            text-align: left;
+        }
+
+        #nameInput, #passwordInput {
+            size: 100%;
+            margin: 5px;
+        }
+    
+        #loginButton, #registerButton {
+            size: 100%;
+            margin: 5px;
+        }
+    
+    </style>
+    <body>
+        <div id="loginContainer">
+            <div id="nameDiv">
+                <text id="nameText">Name:</text>
+                <input id="nameInput"></text>
+            </div>
+            
+            <div id="passwordDiv">
+                <text id="passwordText">Password:</text>
+                <input id="passwordInput"></text>
+            </div>
+            
+            <div id="buttonDiv">
+                <button id="loginButton">Login</button>
+                <button id="registerButton">Register</button>
+            </div>
+
+        </div>
+    </body>
+</html>

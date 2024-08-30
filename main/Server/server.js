@@ -3,22 +3,40 @@ isLocalTime = true;
 const http = require("http");
 const express = require("express");
 const app = express();
+const cors = require("cors");
+const dotenv = require("dotenv");
+const requestHandler = require("./requestHandler");
+const mongoConnector = require("./mongodb");
 
 const httpServer = http.createServer(app)
 const { Server } = require("socket.io");
+const { join } = require("path");
 const io = new Server(httpServer, {
     cors: {
         origin: "http://localhost:3000",
     },
 });
+const result = dotenv.config(path = ".../...env");
+if (result.error) {
+    console.error(`${returnCurrentTime()}: Error while loading .env file.`);
+}
+else {
+    console.log(`${returnCurrentTime()}: .env file loaded.`);
+}
+mongoConnector.connect();
 
-app.use(express.static(__dirname));
+app.use(express.static(join(__dirname, "../Client/chatroom")));
+app.use(express.static(join(__dirname, "../Client/login")));
+app.use(express.json());
+app.use(cors());
+
 app.get("/", (req, res) => {
     console.log(`${returnCurrentTime()}: Server started`);
-    res.end();
 })
 
 const users = {};
+
+requestHandler.initRoutes(app);
 
 io.on("connection", socket => {
     console.log(`${returnCurrentTime()}: Client with id ${socket.id} has connected`);
@@ -49,7 +67,7 @@ io.on("connection", socket => {
 })
 
 httpServer.listen(3000, () => {
-    console.log(`${returnCurrentTime()}: Listening`);
+    console.log(`${returnCurrentTime()}: Listening to port 3000`);
 })
 
 function returnCurrentTime() {

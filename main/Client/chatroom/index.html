@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script defer src="http://localhost:3000/socket.io/socket.io.js"></script>
     <script defer src="script.js"></script>
+    <script defer src="page.js"></script>
     <title>Chat App</title>
     <style>
         body {
@@ -43,10 +44,19 @@
         #message-input {
             flex-grow: 1;
         }
+
+        #login-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+        }
         
         </style>
     <body> 
         <div id="message-container"></div>
+        <div id="login-container">
+            <button id="login-button">Login</button>
+        </div>
         <form id="send-container">
             <input type="text" id="message-input">
             <button type="submit" id="send-button">Send</button>
