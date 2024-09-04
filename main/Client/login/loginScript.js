@@ -3,6 +3,7 @@ isLocalTime = true;
 const nameInput = document.getElementById("nameInput");
 const passwordInput = document.getElementById("passwordInput");
 const loginButton = document.getElementById("loginButton");
+const registerButton = document.getElementById("registerButton");
 
 loginButton.addEventListener("click", () => {
     const name = nameInput.value;
@@ -12,7 +13,8 @@ loginButton.addEventListener("click", () => {
         alert("Please enter name and password");
         return;
     }
-    console.log(`Name: ${name}, Password: ${password}`);
+
+    postLog(`Sending login request: Name: ${name}, Password: ${password}`);
 
     fetch(`http://localhost:3000/login`, {
         method: "POST",
@@ -25,20 +27,56 @@ loginButton.addEventListener("click", () => {
         })
     })
     .then(response => response.json())
-    .then(data => { console.log(data); })
+    .then(data => { postLog(`Response: ${data.message}`); })
     .catch(error => {
-        console.log(error);
+        postLog(`Error: ${error}`, true);
+    })
+
+
+});
+
+registerButton.addEventListener("click", () => {
+    const name = nameInput.value;
+    const password = passwordInput.value;
+    
+    if (!name || !password) {
+        alert("Please enter name and password");
+        return;
+    }
+    postLog(`Sending registration request: Name: ${name}, Password: ${password}`);
+
+    fetch(`http://localhost:3000/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: name,
+            password: password
+        })
+    })
+    .then(response => response.json())
+    .then(data => { postLog(`Response: ${data.message}`); })
+    .catch(error => {
+        postLog(`Error: ${error}`, true);
     })
 });
 
-function returnCurrentTime() {
+function postLog(data, isError = false) {
     const currentTime = new Date();
 
+    let timeString;
     if (isLocalTime) {
-        return currentTime.toLocaleString();
+        timeString = currentTime.toLocaleString();
     }
     else{
-        return currentTime.toString();
+        timeString = currentTime.toString()
     }
-    return currentTime.toString();
+
+    if (isError) {
+        console.error(`${timeString}: ${data}`);
+    }
+    else {
+        console.log(`${timeString}: ${data}`);
+    }
 }

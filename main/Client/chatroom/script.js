@@ -10,7 +10,7 @@ const loginButton = document.getElementById("login-button");
 let name = null;
 
 socket.on("connect", () => {
-    console.log(`${returnCurrentTime()}: Socket connected: ${socket.id}`);
+    postLog(`Socket connected: ${socket.id}`);
     while(!name){
         name = prompt("Enter your name: ");
     }
@@ -19,35 +19,41 @@ socket.on("connect", () => {
 })
 
 .on("message", data => {
-    console.log(`${returnCurrentTime()}: Message recieved from server: ${data}`);
+    postLog(`Message recieved from server: ${data}`);
 })
 
 .on("broadcastChatMessage", data => {
     const userId = data.userId;
     const userName = data.userName;
     const message = data.message;
-    console.log(`${returnCurrentTime()}: Broadcast message recieved from server: "${message}" from user "${userName}" with id "${userId}"`);
+    postLog(`Broadcast message recieved from server: "${message}" from user "${userName}" with id "${userId}"`);
     appendMessage({userId: userId, userName: userName, message: message});
 })
 
 .on("newUserConnected", data => {
     const userId = data.userId;
     const userName = data.userName;
+    const date = new Date();
+    const timestamp = date.toLocaleString();
+
     if(socket.id === userId){
-        console.log(`${returnCurrentTime()}: You are now connected "${userName}" with id "${userId}"`);
-        appendMessage({userId: "", userName: "", message: `${returnCurrentTime()}: You are now connected "${userName}"`});
+        postLog(`You are now connected "${userName}" with id "${userId}"`);
+        appendMessage({userId: "", userName: "", message: `${timestamp}: You are now connected "${userName}"`});
     }
     else{
-        console.log(`${returnCurrentTime()}: New user "${userName}" connected with id "${userId}"`);
-        appendMessage({userId: "", userName: "", message: `${returnCurrentTime()}: New user "${userName}" connected `});
+        postLog(`New user "${userName}" connected with id "${userId}"`);
+        appendMessage({userId: "", userName: "", message: `${timestamp}: New user "${userName}" connected `});
     }
 })
 
 .on("userDisconnected", data => {
     const userId = data.userId;
     const userName = data.userName; 
-    console.log(`${returnCurrentTime()}: User with name "${userName}" and id "${userId}" has disconnected`);
-    appendMessage({message: `${returnCurrentTime()}: User "${userName}" disconnected`});
+    const date = new Date();
+    const timestamp = Date.currentTime.toLocaleString();
+
+    postLog(`User with name "${userName}" and id "${userId}" has disconnected`);
+    appendMessage({message: `${timestamp}: User "${userName}" disconnected`});
 })
 
 messageForm.addEventListener("submit", e => {
@@ -56,7 +62,7 @@ messageForm.addEventListener("submit", e => {
     userName = name;
     const message = messageInput.value;
     
-    console.log(`${returnCurrentTime()}: Message is emitted: "${message}" from user "${userName}" with id "${userId}"`);
+    postLog(`Message is emitted: "${message}" from user "${userName}" with id "${userId}"`);
     socket.emit("sendChatMessage", message);
     appendMessage({userId: userId, userName: userName, message: message});
     messageInput.value = "";
@@ -65,7 +71,7 @@ messageForm.addEventListener("submit", e => {
 loginButton.addEventListener("click", () => {
     userId = socket.id;
     userName = name;
-    console.log(`${returnCurrentTime()}: Login button clicked. . Redirecting user "${userName}" with id "${userId}" to login page`);
+    postLog(`Login button clicked. Redirecting user "${userName}" with id "${userId}" to login page`);
     window.location.href = "login.html";
 })
 
@@ -82,23 +88,30 @@ function appendMessage(data){
     
     if(!userId){
         messageElement.innerText = `${message}`;
-        console.log(`${returnCurrentTime()}: Message is appended: "${message}"`);
+        postLog(`Message is appended: "${message}"`);
     }
     else{
         messageElement.innerText = `${userName}: ${message}`;
-        console.log(`${returnCurrentTime()}: Message is appended: "${message}" from user "${userName}" with id "${userId}"`);
+        postLog(`Message is appended: "${message}" from user "${userName}" with id "${userId}"`);
     }
     messageContainer.appendChild(messageElement);
 }
 
-function returnCurrentTime() {
+function postLog(data, isError = false) {
     const currentTime = new Date();
-    
+
+    let timeString;
     if (isLocalTime) {
-        return currentTime.toLocaleString();
+        timeString = currentTime.toLocaleString();
     }
     else{
-        return currentTime.toString();
+        timeString = currentTime.toString()
     }
-    return currentTime.toString();
+
+    if (isError) {
+        console.error(`${timeString}: ${data}`);
+    }
+    else {
+        console.log(`${timeString}: ${data}`);
+    }
 }

@@ -6,38 +6,46 @@ let mongoConnectionString = null;
 const mongoConnector = {
 
     connect: () => {
-        console.log(`${returnCurrentTime()}: Attempting connection with MongoDB`);
+        postLog(`Attempt to connect to MongoDB`);
         mongoConnectionString = process.env.MONGO_CONNECTION_STRING;
+        databseConnectionString = mongoConnectionString + "/database1";
 
         if (!mongoConnectionString) {
-            console.log(`${returnCurrentTime()}: MongoDB connection string not found`);
+            postLog(`MongoDB connection string not found`, true);
             return;
         }
-        mongoose.connect(mongoConnectionString);
+        mongoose.connect(databseConnectionString);
         mongoose.connection.on("connected", () => {
-            console.log(`${returnCurrentTime()}: Connected to MongoDB`);
+            postLog(`Connected to MongoDB`);
         })
 
         mongoose.connection.on("error", (err) => {
-            console.log(`${returnCurrentTime()}: Error connecting to MongoDB: ${err}`);
+            postLog(`Error connecting to MongoDB: ${err}`, true);
         })
 
         mongoose.connection.on("disconnected", () => {
-            console.log(`${returnCurrentTime()}: Disconnected from MongoDB`);
+            postLog(`Disconnected from MongoDB`);
         })
     }
 }
 
 module.exports = mongoConnector
 
-function returnCurrentTime() {
+function postLog(data, isError = false) {
     const currentTime = new Date();
 
+    let timeString;
     if (isLocalTime) {
-        return currentTime.toLocaleString();
+        timeString = currentTime.toLocaleString();
     }
     else{
-        return currentTime.toString();
+        timeString = currentTime.toString()
     }
-    return currentTime.toString();
+
+    if (isError) {
+        console.error(`${timeString}: ${data}`);
+    }
+    else {
+        console.log(`${timeString}: ${data}`);
+    }
 }

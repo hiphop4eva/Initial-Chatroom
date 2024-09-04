@@ -18,10 +18,10 @@ const io = new Server(httpServer, {
 });
 const result = dotenv.config(path = ".../...env");
 if (result.error) {
-    console.error(`${returnCurrentTime()}: Error while loading .env file.`);
+    postLog(`Error while loading .env file.`, true);
 }
 else {
-    console.log(`${returnCurrentTime()}: .env file loaded.`);
+    postLog(`.env file loaded.`);
 }
 mongoConnector.connect();
 
@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(cors());
 
 app.get("/", (req, res) => {
-    console.log(`${returnCurrentTime()}: Server started`);
+    postLog(`Server started`);
 })
 
 const users = {};
@@ -39,27 +39,27 @@ const users = {};
 requestHandler.initRoutes(app);
 
 io.on("connection", socket => {
-    console.log(`${returnCurrentTime()}: Client with id ${socket.id} has connected`);
+    postLog(`Client with id ${socket.id} has connected`);
     socket.emit("message", "Welcome");
 
     socket.on("sendChatMessage", message => {
         userId = socket.id;
         userName = users[userId];
-        console.log(`${returnCurrentTime()}: Broadcasting message to clients: ${message}`);
+        postLog(`Broadcasting message to clients: ${message}`);
         socket.broadcast.emit("broadcastChatMessage", {userId: userId, userName: userName, message: message});
     })
 
     .on("newUser", userName => {
         userId = socket.id;
         users[userId] = userName;
-        console.log(`${returnCurrentTime()}: Broadcasting new user connection to clients: ${userName}`);
+        postLog(`Broadcasting new user connection to clients: "${userName}" with id "${userId}"`);
         socket.broadcast.emit("newUserConnected", {userId: userId, userName: userName});
     })
 
     .on("disconnect", () => {
         userId = socket.id;
         userName = users[userId];
-        console.log(`${returnCurrentTime()}: Client with name "${userName}" and id "${userId}" has disconnected`);
+        postLog(`Broadcasting user disconnection to clients: "${userName}" with id "${userId}`);
         delete users[socket.id];
         socket.broadcast.emit("userDisconnected", {userId: userId, userName: userName});
     });
@@ -67,17 +67,24 @@ io.on("connection", socket => {
 })
 
 httpServer.listen(3000, () => {
-    console.log(`${returnCurrentTime()}: Listening to port 3000`);
+    postLog(`Listening to port 3000`);
 })
 
-function returnCurrentTime() {
+function postLog(data, isError = false) {
     const currentTime = new Date();
 
+    let timeString;
     if (isLocalTime) {
-        return currentTime.toLocaleString();
+        timeString = currentTime.toLocaleString();
     }
     else{
-        return currentTime.toString();
+        timeString = currentTime.toString()
     }
-    return currentTime.toString();
+
+    if (isError) {
+        console.error(`${timeString}: ${data}`);
+    }
+    else {
+        console.log(`${timeString}: ${data}`);
+    }
 }
