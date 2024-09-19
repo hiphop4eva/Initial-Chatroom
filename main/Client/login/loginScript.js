@@ -27,7 +27,16 @@ loginButton.addEventListener("click", () => {
         })
     })
     .then(response => response.json())
-    .then(data => { postLog(`Response: ${data.message}`); })
+    .then(data => {
+        postLog(`Response: ${data.message}`); 
+        postLog(`Response: ${data.successful}`); 
+        
+        if (data.successful) {
+
+            postLog(`User "${name}" logged in`);
+            window.location.href = "http://localhost:3000";
+        }
+    })
     .catch(error => {
         postLog(`Error: ${error}`, true);
     })

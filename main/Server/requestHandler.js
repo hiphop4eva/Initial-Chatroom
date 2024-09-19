@@ -1,6 +1,7 @@
 const express = require("express");
 const bycrypt = require("bcrypt");
 const User = require("./models");
+const session = require("express-session");
 
 let mongoPassword = null;
 
@@ -9,12 +10,23 @@ const requestHandler = {
         const name = req.body.name;
         const password = req.body.password;
 
+        postLog(`Post request from login page data is: Name: ${name}, Password: ${password}`);
+
+        const userFound = await User.findOne({name: name});
+        
+        if (userFound) {
+            postLog("User already exists");
+
+            res.status(400);
+            res.json({message: "User already exists"});
+            return;
+        }
+
         const salt = bycrypt.genSaltSync(10);
         const hash = bycrypt.hashSync(password, salt);
 
-        postLog(`Post request from login page data is: Name: ${name}, Password: ${password} \n 
-            Hash: ${hash}`);
-        
+        postLog( `Hash is ${hash}`)
+
         const user = new User({
             name: name,
             password: hash
@@ -44,14 +56,16 @@ const requestHandler = {
         postLog(`Get request from login page data is: Name: ${name}, Password: ${password}`);
         
         const user = await User.findOne({name: name});
-        postLog(`Comparing passwords: ${password} vs ${user.password}`);
+        
         if (!user) {
             notFound = true;
             errorMessage = "User not found";
         }
-        
         else {
-            if (!bycrypt.compareSync(password, user.password)) {
+            postLog(`Comparing passwords: ${password} vs ${user.password}`);
+
+            const result = bycrypt.compareSync(password, user.password);
+            if (!result) {
                 notFound = true;
                 errorMessage = "Wrong password";
             }
@@ -67,12 +81,39 @@ const requestHandler = {
             res.json(response);
         }
         else {
+            postLog(`User "${name}" found`);
+
             response = {
                 message: "User found", 
+                successful: true
             }
+
+            req.session.isAuth = true;
+            req.session.userId = user._id;
+            req.session.username = user.name;
+            
             res.status(200);
             res.json(response);
         }
+    },
+
+    handleSession: (req, res) => {
+        postLog("Session request received");
+        let response;
+        if (req.session.isAuth) {
+            response = {
+                isAuth : true,
+                userId : req.session.userId,
+                username : req.session.username
+            }
+        }
+        else{
+            response = {
+                isAuth : false
+            }
+        }
+
+        res.json(response);
     },
 
     initRoutes: (app) => {
@@ -80,6 +121,7 @@ const requestHandler = {
 
         app.post("/register", requestHandler.handleRegister);
         app.post("/login", requestHandler.handleLogin);
+        app.get("/session", requestHandler.handleSession);
     }
 }
 

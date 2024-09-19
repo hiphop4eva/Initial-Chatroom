@@ -2,11 +2,13 @@ isLocalTime = true;
 
 const http = require("http");
 const express = require("express");
+const session = require("express-session");
 const app = express();
 const cors = require("cors");
 const dotenv = require("dotenv");
 const requestHandler = require("./requestHandler");
 const mongoConnector = require("./mongodb");
+const User = require("./models");
 
 const httpServer = http.createServer(app)
 const { Server } = require("socket.io");
@@ -16,23 +18,59 @@ const io = new Server(httpServer, {
         origin: "http://localhost:3000",
     },
 });
+
+let sessionKey = null;
+
 const result = dotenv.config(path = ".../...env");
 if (result.error) {
     postLog(`Error while loading .env file.`, true);
 }
 else {
     postLog(`.env file loaded.`);
+    
+    sessionKey = process.env.SESSION_SECRET_KEY;
 }
+
 mongoConnector.connect();
 
-app.use(express.static(join(__dirname, "../Client/chatroom")));
-app.use(express.static(join(__dirname, "../Client/login")));
 app.use(express.json());
 app.use(cors());
+app.use(session({
+    secret: sessionKey,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: false,
+        maxAge: 3600000, // 1 hour
+    },
+}));
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res, next) => {
     postLog(`Server started`);
+
+    if(!req.session.isAuth){
+        req.session.isAuth = false;
+        postLog("Session doesn't have authentication.");
+    }
+    else if(req.session.isAuth == true) {
+        const userId = req.session.userId;
+        postLog(`Attempting to find user with id ${userId}`);
+        const user = await User.findById(userId);
+
+        if(user) {
+            postLog("User found and logged in.");
+
+        }
+        else{
+            postLog("User not found.", true);
+        }
+    }
+
+    next();
 })
+.use(express.static(join(__dirname, "../Client/chatroom")))
+.use(express.static(join(__dirname, "../Client/login")));
 
 const users = {};
 

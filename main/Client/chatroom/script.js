@@ -9,6 +9,23 @@ const loginButton = document.getElementById("login-button");
 
 let name = null;
 
+fetch("http://localhost:3000/session", {
+    method: "GET",
+    headers: {
+        "Content-Type": "application/json"
+    }
+})
+.then(respone => respone.json())
+.then(data => {
+    if(data.isAuth){
+        name = data.username;
+        loginContainer.remove();
+    }
+})
+.catch(error => {
+    postLog(`Error: ${error}`, true);
+});
+
 socket.on("connect", () => {
     postLog(`Socket connected: ${socket.id}`);
     while(!name){
