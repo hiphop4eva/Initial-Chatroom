@@ -15,17 +15,17 @@ const requestHandler = {
         const userFound = await User.findOne({name: name});
         
         if (userFound) {
-            postLog("User already exists");
+            postLog("Username is taken");
 
             res.status(400);
-            res.json({message: "User already exists"});
+            res.json({message: "Username is taken"});
             return;
         }
 
         const salt = bycrypt.genSaltSync(10);
         const hash = bycrypt.hashSync(password, salt);
 
-        postLog( `Hash is ${hash}`)
+        postLog(`Hash is ${hash}`)
 
         const user = new User({
             name: name,
@@ -40,7 +40,8 @@ const requestHandler = {
         }
 
         response = {
-            message: "User created", 
+            message: "User created",
+            successful: true
         }
 
         res.status(200);
@@ -97,9 +98,9 @@ const requestHandler = {
         }
     },
 
-    handleSession: (req, res) => {
+    handleGetSession: (req, res) => {
         postLog("Session request received");
-        let response;
+        let response = null;
         if (req.session.isAuth) {
             response = {
                 isAuth : true,
@@ -116,12 +117,20 @@ const requestHandler = {
         res.json(response);
     },
 
+    handleDeleteSession: (req, res) => {
+        postLog("Session deletion request received");
+
+        req.session.destroy();
+        res.status(200).json({message: "Session deleted"});
+    },
+
     initRoutes: (app) => {
         mongoPassword = process.env.MONGO_PASSWORD;
 
         app.post("/register", requestHandler.handleRegister);
         app.post("/login", requestHandler.handleLogin);
-        app.get("/session", requestHandler.handleSession);
+        app.get("/session", requestHandler.handleGetSession);
+        app.delete("/session", requestHandler.handleDeleteSession);
     }
 }
 
