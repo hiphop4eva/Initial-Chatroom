@@ -41,7 +41,8 @@ const requestHandler = {
 
         response = {
             message: "User created",
-            successful: true
+            successful: true,
+            username: name,
         }
 
         res.status(200);
@@ -99,22 +100,46 @@ const requestHandler = {
     },
 
     handleGetSession: (req, res) => {
-        postLog("Session request received");
+        postLog("Session get request received");
         let response = null;
-        if (req.session.isAuth) {
-            response = {
-                isAuth : true,
-                userId : req.session.userId,
-                username : req.session.username
-            }
-        }
-        else{
-            response = {
-                isAuth : false
-            }
+        response = {
+            isAuth : req.session.isAuth,
+            userId : req.session.userId,
+            username : req.session.username
         }
 
-        res.json(response);
+        res.status(200).json(response);
+    },
+
+    handlePostSession: (req, res) => {
+        postLog("Session post request received");
+        const isAuth = req.body.isAuth;
+        const userId = req.body.userId;
+        const username = req.body.username;
+
+        if(req.session){
+            postLog(`isAuth: ${isAuth}, userId: ${userId}, username: ${username}`);
+            if (isAuth) {
+                postLog("Session updating isAuth property");
+                req.session.isAuth = isAuth;
+            }
+            if(userId) {
+                postLog("Session updating userId property");
+                req.session.userId = userId;
+            }
+            if(username) {
+                postLog("Session updating username property");
+                req.session.username = username;
+            }
+
+            postLog("Session updated successfully");
+            res.status(200).json({message: "Session updated succesfully"});
+        }
+        else{
+            postLog("Session doesn't exist");
+
+            res.status(404).json({message: "Session doesn't exist"});
+        }
     },
 
     handleDeleteSession: (req, res) => {
@@ -128,8 +153,11 @@ const requestHandler = {
         mongoPassword = process.env.MONGO_PASSWORD;
 
         app.post("/register", requestHandler.handleRegister);
+        
         app.post("/login", requestHandler.handleLogin);
+
         app.get("/session", requestHandler.handleGetSession);
+        app.post("/session", requestHandler.handlePostSession);
         app.delete("/session", requestHandler.handleDeleteSession);
     }
 }

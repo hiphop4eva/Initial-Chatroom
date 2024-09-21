@@ -47,7 +47,7 @@ loginButton.addEventListener("click", () => {
         postLog(`Response: ${data.message}`);
 
         if (data.successful) {
-
+            
             postLog(`User "${name}" logged in`);
             window.location.href = "http://localhost:3000";
         }

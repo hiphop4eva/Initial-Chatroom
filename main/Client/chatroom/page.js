@@ -1,12 +1,3 @@
-isLocalTime = true;
-
-const socket = io('http://localhost:3000');
-const messageContainer = document.getElementById("message-container");
-const messageForm = document.getElementById("send-container");
-const messageInput = document.getElementById("message-input");
-const loginContainer = document.getElementById("login-container");
-const loginButton = document.getElementById("login-button");
-
 let name = null;
 
 function appendMessage(data){
@@ -61,21 +52,3 @@ function addLogoutButton(){
     loginContainer.appendChild(logoutButton);
 }
 
-function postLog(data, isError = false) {
-    const currentTime = new Date();
-
-    let timeString;
-    if (isLocalTime) {
-        timeString = currentTime.toLocaleString();
-    }
-    else{
-        timeString = currentTime.toString()
-    }
-
-    if (isError) {
-        console.error(`${timeString}: ${data}`);
-    }
-    else {
-        console.log(`${timeString}: ${data}`);
-    }
-}

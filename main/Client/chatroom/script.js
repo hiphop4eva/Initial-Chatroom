@@ -1,28 +1,34 @@
-fetch("http://localhost:3000/session", {
-    method: "GET",
-    headers: {
-        "Content-Type": "application/json"
+sessionData = fetchSessionData()
+.then(sessionData => {
+    if(sessionData.username){
+        name = sessionData.username;
     }
-})
-.then(respone => respone.json())
-.then(data => {
-    if(data.isAuth){
-        name = data.username;
+    if(sessionData.isAuth){
         removeLoginButton();
         addLogoutButton();
     }
-})
-.catch(error => {
-    postLog(`Error: ${error}`, true);
 });
 
 socket.on("connect", () => {
     postLog(`Socket connected: ${socket.id}`);
-    while(!name){
-        name = prompt("Enter your name: ");
-    }
-    socket.emit("newUser", name);
-    
+
+    sessionData = fetchSessionData()
+    .then(sessionData =>{
+        username = sessionData.username;
+        
+        if(username){
+            name = username;
+        }
+        else{
+            while(!name){
+                name = prompt("Enter your name: ");
+            }
+            
+            postSessionData({username: name});
+        }
+        
+        socket.emit("newUser", name);
+    });
 })
 
 .on("message", data => {
