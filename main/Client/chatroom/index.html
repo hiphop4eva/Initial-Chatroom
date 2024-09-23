@@ -28,6 +28,12 @@
             padding: 5px;
         }
         
+        #login-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+        }
+
         #message-container div:nth-child(2n){
             background-color: #FFF;
         }
@@ -45,22 +51,33 @@
         #message-input {
             flex-grow: 1;
         }
+        
+        #file-input {
+            display: none;
+        }
 
-        #login-container {
-            position: fixed;
-            top: 10px;
-            left: 10px;
+        #attachment-button {
+            cursor: pointer;
+        }
+
+        #send-button {
+            cursor: pointer;
         }
         
         </style>
     <body> 
         <div id="message-container"></div>
+        
         <div id="login-container">
             <button id="login-button">Login</button>
         </div>
+        
         <form id="send-container">
             <input type="text" id="message-input">
+            <button type="button" id="attachment-button">+</button>
             <button type="submit" id="send-button">Send</button>
         </form>
+
+        <input type="file" id="file-input" accept="image/*">
     </body>
     </html>

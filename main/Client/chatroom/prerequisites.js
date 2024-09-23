@@ -1,11 +1,14 @@
 isLocalTime = true;
 
 const socket = io('http://localhost:3000');
+
 const messageContainer = document.getElementById("message-container");
 const messageForm = document.getElementById("send-container");
 const messageInput = document.getElementById("message-input");
 const loginContainer = document.getElementById("login-container");
 const loginButton = document.getElementById("login-button");
+const attachmentButton = document.getElementById("attachment-button");
+const fileInput = document.getElementById("file-input");
 
 function postLog(data, isError = false) {
     const currentTime = new Date();

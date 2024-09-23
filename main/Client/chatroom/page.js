@@ -1,25 +1,48 @@
 let name = null;
+var borderColor = "#5F5F5D33";
 
-function appendMessage(data){
-    userId = data.userId;
-    userName = data.userName;
-    message = data.message;
+function appendMessage(data, color){
+    const userName = data.userName;
+    const message = data.message;
 
-    const messageElement = document.createElement("div");
+    const messageDiv = document.createElement("div");
+    messageDiv.style.display = "flex";
+    messageDiv.style.backgroundColor = color;
+    messageDiv.style.borderLeft =   `2px solid ${borderColor}`;
+    messageDiv.style.borderRight =  `2px solid ${borderColor}`;
+    messageDiv.style.borderTop =    `1px solid ${borderColor}`;
+    messageDiv.style.borderBottom = `1px solid ${borderColor}`;
     
-    if(userId === socket.id){
-        messageElement.style.backgroundColor = "lightgreen";
-    }
+    messageDiv.innerText = `${userName}: ${message}`;
+    messageContainer.appendChild(messageDiv);
+}
+
+function appendImage(data, color, maxWidth = `1000px`, maxHeight = `175px`){
+    const userName = data.userName;
+    const imageDataUrl = data.imageDataUrl;
     
-    if(!userId){
-        messageElement.innerText = `${message}`;
-        postLog(`Message is appended: "${message}"`);
-    }
-    else{
-        messageElement.innerText = `${userName}: ${message}`;
-        postLog(`Message is appended: "${message}" from user "${userName}" with id "${userId}"`);
-    }
-    messageContainer.appendChild(messageElement);
+    const messageDiv = document.createElement("div");
+    messageDiv.style.display = "flex";
+    messageDiv.style.backgroundColor = color;
+    messageDiv.style.borderLeft =   `2px solid ${borderColor}`;
+    messageDiv.style.borderRight =  `2px solid ${borderColor}`;
+    messageDiv.style.borderTop =    `1px solid ${borderColor}`;
+    messageDiv.style.borderBottom = `1px solid ${borderColor}`;
+
+    const text = document.createElement("span");
+    text.style.maxHeight = `5px`;
+    text.style.top = "2px";
+    text.innerText = `${userName}: `;
+    
+    const img = document.createElement("img");
+    img.style.maxWidth = `${maxWidth}`;
+    img.style.maxHeight = `${maxHeight}`;
+    img.src = imageDataUrl;
+    
+    messageDiv.appendChild(text);
+    messageDiv.appendChild(img);
+
+    messageContainer.appendChild(messageDiv);
 }
 
 function removeLoginButton(){

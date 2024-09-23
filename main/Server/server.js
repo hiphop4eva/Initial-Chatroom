@@ -33,9 +33,7 @@ else {
 
 mongoConnector.connect();
 
-app.use(express.json());
-app.use(cors());
-app.use(session({
+const sessionMiddleware = session({
     secret: sessionKey,
     resave: false,
     saveUninitialized: false,
@@ -44,8 +42,11 @@ app.use(session({
         httpOnly: false,
         maxAge: 3600000, // 1 hour
     },
-}));
+})
 
+app.use(express.json());
+app.use(cors());
+app.use(sessionMiddleware);
 app.get("/", async (req, res, next) => {
     postLog(`Server started`);
 
@@ -76,30 +77,51 @@ const users = {};
 
 requestHandler.initRoutes(app);
 
+io.engine.use(sessionMiddleware);
+
 io.on("connection", socket => {
-    postLog(`Client with id ${socket.id} has connected`);
+    postLog(`Client with id "${socket.id}" has connected`);
     socket.emit("message", "Welcome");
 
     socket.on("sendChatMessage", message => {
-        userId = socket.id;
-        userName = users[userId];
+        const senderSession = socket.request.session;
+        const senderSessionId = senderSession.id;
+        const userId = socket.id;
+        const userName = users[userId];
+
         postLog(`Broadcasting message to clients: ${message}`);
-        socket.broadcast.emit("broadcastChatMessage", {userId: userId, userName: userName, message: message});
+        socket.broadcast.emit("broadcastSendChatMessage", {userId: userId, userName: userName, message: message, senderSessionId: senderSessionId});
+    })
+
+    .on("sendChatImage", data =>{
+        const senderSession = socket.request.session;
+        const senderSessionId = senderSession.id;
+        const userId = socket.id;
+        const userName = users[userId];
+
+        postLog(`Broadcasting image to clients`);
+        socket.broadcast.emit("broadcastSendChatImage", {userId: userId, userName: userName, imageDataUrl: data.imageDataUrl, senderSessionId: senderSessionId});
     })
 
     .on("newUser", userName => {
+        senderSession = socket.request.session;
+        senderSessionId = senderSession.id;
         userId = socket.id;
         users[userId] = userName;
+        
         postLog(`Broadcasting new user connection to clients: "${userName}" with id "${userId}"`);
-        socket.broadcast.emit("newUserConnected", {userId: userId, userName: userName});
+        socket.broadcast.emit("newUserConnected", {userId: userId, userName: userName, senderSessionId: senderSessionId});
     })
 
     .on("disconnect", () => {
+        senderSession = socket.request.session;
+        senderSessionId = senderSession.id;
         userId = socket.id;
         userName = users[userId];
+        
         postLog(`Broadcasting user disconnection to clients: "${userName}" with id "${userId}`);
         delete users[socket.id];
-        socket.broadcast.emit("userDisconnected", {userId: userId, userName: userName});
+        socket.broadcast.emit("userDisconnected", {userId: userId, userName: userName, senderSessionId: senderSessionId});
     });
 
 })

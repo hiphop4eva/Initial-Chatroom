@@ -101,8 +101,8 @@ const requestHandler = {
 
     handleGetSession: (req, res) => {
         postLog("Session get request received");
-        let response = null;
         response = {
+            sessionId : req.session.id,
             isAuth : req.session.isAuth,
             userId : req.session.userId,
             username : req.session.username
@@ -120,15 +120,12 @@ const requestHandler = {
         if(req.session){
             postLog(`isAuth: ${isAuth}, userId: ${userId}, username: ${username}`);
             if (isAuth) {
-                postLog("Session updating isAuth property");
                 req.session.isAuth = isAuth;
             }
             if(userId) {
-                postLog("Session updating userId property");
                 req.session.userId = userId;
             }
             if(username) {
-                postLog("Session updating username property");
                 req.session.username = username;
             }
 
