@@ -83,16 +83,14 @@ socket.on("connect", () => {
 .on("newUserConnected", data => {
     const userId = data.userId;
     const userName = data.userName;
-    const date = new Date();
-    const timestamp = date.toLocaleString();
 
     if(socket.id === userId){
         postLog(`You are now connected "${userName}" with id "${userId}"`);
-        window.appendMessage({userId: "", userName: "", message: `${timestamp}: You are now connected "${userName}"`});
+        window.appendMessage({userId: "", userName: "", message: `You are now connected "${userName}"`});
     }
     else{
         postLog(`New user "${userName}" connected with id "${userId}"`);
-        window.appendMessage({userId: "", userName: "", message: `${timestamp}: New user "${userName}" connected `});
+        window.appendMessage({userId: "", userName: "", message: `New user "${userName}" connected `});
     }
 })
 
