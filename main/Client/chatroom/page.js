@@ -45,22 +45,33 @@ function createModalWindow(){
     return modalWindow;
 }
 
-function createUserIcon(name){
+function createUserIcon(userInfo = null){
     const userIcon = document.createElement("div");
+
+    var username = "";
+    var userId = null;
+    var hasAvatar = false;
     
-    if(!name){
-        name = ""
+    if(userInfo){
+        username = userInfo.name;
+        userId = userInfo.userId;
+        hasAvatar = userInfo.hasAvatar;
     }
 
-    userIcon.innerText = name;
-    userIcon.style.display = "flex";
-    userIcon.style.justifyContent = "center";
-    userIcon.style.alignItems = "center";
-    userIcon.style.height = "40px";
-    userIcon.style.width = "40px";
-    userIcon.style.backgroundColor = "lightblue";
-    userIcon.style.cursor = "pointer";
-
+    if(!hasAvatar){
+        userIcon.innerText = "";
+        if(username){
+            userIcon.innerText = username.charAt(0).toUpperCase();
+        }
+        userIcon.style.display = "flex";
+        userIcon.style.justifyContent = "center";
+        userIcon.style.alignItems = "center";
+        userIcon.style.height = "40px";
+        userIcon.style.width = "40px";
+        userIcon.style.backgroundColor = "lightblue";
+        userIcon.style.cursor = "pointer";
+    }
+    
     userIcon.classList.add("userIcons");
     
     userIcon.addEventListener("click", () => {
@@ -77,7 +88,12 @@ function createUserIcon(name){
         modalUserInfo.style.backgroundColor = "lightgrey";
 
         const modalUserName = document.createElement("p");
-        modalUserName.innerText = name;
+        modalUserName.innerText = username;
+        modalUserName.style.cursor = "pointer";
+
+        modalUserName.addEventListener("click", () => {
+            window.location.href = `user?userId=${userId}`;
+        });
 
         modalUserInfo.appendChild(modalUserName);
         modalWindow.appendChild(modalUserInfo);
@@ -88,7 +104,7 @@ function createUserIcon(name){
     return userIcon;
 }
 
-function createMessageDiv(userName, color){
+function createMessageDiv(color, userInfo = null){
     const date = new Date();
     const timestamp = `${date.getHours()}:${date.getMinutes()}`;
 
@@ -105,21 +121,24 @@ function createMessageDiv(userName, color){
     messageDiv.style.borderTop =    `1px solid ${borderColor}`;
     messageDiv.style.borderBottom = `1px solid ${borderColor}`;
 
-    const userIcon = createUserIcon(userName);
+    const userIcon = createUserIcon(userInfo);
     
     const messageDivInner = document.createElement("div");
     messageDivInner.style.display = "flex";
     messageDivInner.style.backgroundColor = color;
     messageDivInner.style.flexGrow = "1";
-    //messageDivInner.style.borderRight =  `2px solid ${borderColor}`;
-    //messageDivInner.style.borderLeft =   `2px solid ${borderColor}`;
-    //messageDivInner.style.borderTop =    `1px solid ${borderColor}`;
-    //messageDivInner.style.borderBottom = `1px solid ${borderColor}`;
+    messageDivInner.style.borderRight =  `1px solid #99999922`;
+    messageDivInner.style.borderLeft =   `1px solid #99999922`;
+    messageDivInner.style.borderTop =    `1px solid #99999922`;
+    messageDivInner.style.borderBottom = `1px solid #99999922`;
 
     const messageDivs = document.getElementsByClassName("messageDivs");
     const messageDivsCount = messageDivs.length;
     if(messageDivsCount % 2 == 0 && color == null){
-        messageDivInner.style.backgroundColor = "#F0F0F0";
+        messageDivInner.style.backgroundColor = "#E0E0E0";
+    }
+    else if(color == null){
+        messageDivInner.style.backgroundColor = "#C8C8C8";
     }
 
     const text = document.createElement("span");
@@ -149,15 +168,11 @@ function createImageDiv(imageDataUrl, maxWidth = `1000px`, maxHeight = `175px`){
     let enlargened = false;
     imgDiv.addEventListener("click", () => {
         if(!enlargened){
-            //img.style.maxWidth =     `1000px`;
-            //img.style.maxHeight =    `1000px`;
             imgDiv.style.maxWidth =  `1000px`;
             imgDiv.style.maxHeight = `1000px`;
             enlargened = true;
         }
         else{
-            //img.style.maxWidth = maxWidth;
-            //img.style.maxHeight = maxHeight;
             imgDiv.style.maxWidth = maxWidth;
             imgDiv.style.maxHeight = maxHeight;
             enlargened = false;
@@ -176,11 +191,18 @@ function createImageDiv(imageDataUrl, maxWidth = `1000px`, maxHeight = `175px`){
     return imgDiv;
 }
 
-function appendMessage(data, color){
-    const userName = data.userName;
-    const message = data.message;
+function appendMessage(message, color, userInfo = null){
     
-    const {messageDiv, messageDivInner} = createMessageDiv(userName, color);
+    var username = "";
+    var userId = null;
+    
+    if(userInfo){
+        username = userInfo.name;
+        userId = userInfo.userId;
+    }
+
+    const {messageDiv, messageDivInner} = createMessageDiv(color, userInfo);
+    messageDiv.userId = userId;
     
     const text = document.createElement("span");
     text.innerText = message;
@@ -190,11 +212,16 @@ function appendMessage(data, color){
     messageContainer.appendChild(messageDiv);
 }
 
-function appendImage(data, color, maxWidth = `1000px`, maxHeight = `175px`){
-    const userName = data.userName;
-    const imageDataUrl = data.imageDataUrl;
+function appendImage(imageDataUrl, color, userInfo = null, maxWidth = `1000px`, maxHeight = `175px`){
+    var userId = null;
     
-    const {messageDiv, messageDivInner} = createMessageDiv(userName, color);
+    if(userInfo){
+        username = userInfo.name;
+        userId = userInfo.userId;
+    }
+
+    const {messageDiv, messageDivInner} = createMessageDiv(color, userInfo);
+    messageDiv.userId = userId;
     
     const imgDiv = createImageDiv(imageDataUrl, maxWidth, maxHeight);
     

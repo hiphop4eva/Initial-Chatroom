@@ -1,6 +1,9 @@
+var userId = null;
+
 sessionData = fetchSessionData()
 .then(sessionData => {
     if(sessionData.username){
+        userId = sessionData.userId;
         name = sessionData.username;
     }
     if(sessionData.isAuth){
@@ -36,22 +39,23 @@ socket.on("connect", () => {
 })
 
 .on("broadcastSendChatMessage", data => {
-    const userId = data.userId;
-    const userName = data.userName;
     const message = data.message;
+
+    const userInfo = data.userInfo;
+    const username = userInfo.name;
     const senderSessionId = data.senderSessionId;
 
     fetchSessionData().then(sessionData => {
         const getterSessionId = sessionData.sessionId;
 
-        postLog(`Broadcast message recieved from server: "${message}" from user "${userName}" with id "${userId}"`);
+        postLog(`Broadcast message recieved from server: "${message}" from user "${username}"`);
        
         if(senderSessionId === getterSessionId){
-            window.appendMessage({userName: userName, message: message}, "lightgreen");
+            window.appendMessage(message, "lightgreen", userInfo);
         }
-        
+
         else{
-            window.appendMessage({userName: userName, message: message});
+            window.appendMessage(message, null, userInfo);
         }
         
         postLog(`Message is appended: "${message}"`);
@@ -59,22 +63,23 @@ socket.on("connect", () => {
 })
 
 .on("broadcastSendChatImage", data => {
-    const userId = data.userId;
-    const userName = data.userName;
     const senderSessionId = data.senderSessionId;
     const imageDataUrl = data.imageDataUrl;
+    
+    const userInfo = data.userInfo;
+    const username = userInfo.name;
 
     fetchSessionData().then(sessionData => {
         const getterSessionId = sessionData.sessionId;
 
-        postLog(`Broadcast image recieved from server: From user "${userName}" with id "${userId}"`);
+        postLog(`Broadcast image recieved from server: From user "${username}"`);
        
         if(senderSessionId === getterSessionId){
-            window.appendImage({userName: userName, imageDataUrl: imageDataUrl}, "lightgreen");
+            window.appendImage(imageDataUrl, "lightgreen", userInfo);
         }
         
         else{
-            window.appendImage({userName: userName, imageDataUrl: imageDataUrl});
+            window.appendImage(imageDataUrl, null, userInfo);
         }
         
     });
@@ -86,11 +91,11 @@ socket.on("connect", () => {
 
     if(socket.id === userId){
         postLog(`You are now connected "${userName}" with id "${userId}"`);
-        window.appendMessage({userId: "", userName: "", message: `You are now connected "${userName}"`});
+        window.appendMessage(`You are now connected "${userName}"`);
     }
     else{
         postLog(`New user "${userName}" connected with id "${userId}"`);
-        window.appendMessage({userId: "", userName: "", message: `New user "${userName}" connected `});
+        window.appendMessage(`New user "${userName}" connected `);
     }
 })
 
@@ -99,30 +104,51 @@ socket.on("connect", () => {
     const userName = data.userName;
 
     postLog(`User with name "${userName}" and id "${userId}" has disconnected`);
-    window.appendMessage({message: `User "${userName}" disconnected`});
+    window.appendMessage(`User "${userName}" disconnected`);
 })
 
 messageForm.addEventListener("submit", e => {
     e.preventDefault();
-    userId = socket.id;
+
     userName = name;
     const message = messageInput.value;
 
     if(message){
         postLog(`Message is emitted: "${message}" from user "${userName}" with id "${userId}"`);
 
-        socket.emit("sendChatMessage", message);
-        window.appendMessage({userId: userId, userName: userName, message: message} , "lightgreen");
+        socket.emit("sendChatMessage", {message: message, userId: userId});
+
+        if(userId){
+            fetch("http://localhost:3000/findUserWithId", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({userId: userId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                appendMessage(message, "lightgreen", data);
+            })
+            .catch(error => {
+                postLog(`Error: ${error}`, true);
+                return;
+            });
+        }
+
+        else{
+            appendMessage(message, "lightgreen");
+        }
+        
         messageInput.value = "";
     }
 })
 
 loginButton.addEventListener("click", () => {
-    userId = socket.id;
     userName = name;
     
     postLog(`Login button clicked. Redirecting user "${userName}" with id "${userId}" to login page`);
-    window.location.href = "login.html";
+    window.location.href = "login";
 })
 
 attachmentButton.addEventListener("click", () => {
@@ -133,7 +159,6 @@ attachmentButton.addEventListener("click", () => {
 
 fileInput.addEventListener("change", () => {
     postLog(`File selected: "${fileInput.files[0].name}"`);
-    const userName = name;
     const file = fileInput.files[0];
     const fileReader = new FileReader();
 
@@ -145,9 +170,30 @@ fileInput.addEventListener("change", () => {
 
     fileReader.onload = (e) => {
         const imageDataUrl = e.target.result;
-        appendImage({userName: userName, imageDataUrl: imageDataUrl}, "lightgreen");
 
-        socket.emit("sendChatImage", {imageDataUrl: imageDataUrl});
+        if(userId){
+            fetch("http://localhost:3000/findUserWithId", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({userId: userId})
+            })
+            .then(response => response.json())
+            .then(data => {
+                appendImage(imageDataUrl, "lightgreen", data);
+            })
+            .catch(error => {
+                postLog(`Error: ${error}`, true);
+                return;
+            });
+        }
+
+        else{
+            appendImage(imageDataUrl, "lightgreen");
+        }
+
+        socket.emit("sendChatImage", {imageDataUrl: imageDataUrl, userId: userId});
     }
     
     fileReader.readAsDataURL(file);

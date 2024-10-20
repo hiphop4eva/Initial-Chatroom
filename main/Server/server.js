@@ -68,10 +68,8 @@ app.get("/", async (req, res, next) => {
         }
     }
 
-    next();
-})
-.use(express.static(join(__dirname, "../Client/chatroom")))
-.use(express.static(join(__dirname, "../Client/login")));
+    res.redirect("/chatroom");
+});
 
 const users = {};
 
@@ -83,24 +81,46 @@ io.on("connection", socket => {
     postLog(`Client with id "${socket.id}" has connected`);
     socket.emit("message", "Welcome");
 
-    socket.on("sendChatMessage", message => {
+    socket.on("sendChatMessage", data => {
         const senderSession = socket.request.session;
         const senderSessionId = senderSession.id;
-        const userId = socket.id;
-        const userName = users[userId];
-
-        postLog(`Broadcasting message to clients: ${message}`);
-        socket.broadcast.emit("broadcastSendChatMessage", {userId: userId, userName: userName, message: message, senderSessionId: senderSessionId});
+        const message = data.message;
+        
+        const userId = data.userId;
+        User.findOne({userId: userId})
+        .then(user => {
+            postLog(`User name is ${user.name}`);
+            postLog(`Id is ${userId}`);
+            
+            if(user){
+                postLog(`User found`);
+                postLog(`Username is ${user.username}, id is ${user.userId}, createdAt is ${user.createdAt}, hasAvatar is ${user.hasAvatar}`);
+            }
+            
+            postLog(`Broadcasting message to clients: ${message}`);
+            socket.broadcast.emit("broadcastSendChatMessage", {message: message, userInfo: user, senderSessionId: senderSessionId});
+        });
     })
 
     .on("sendChatImage", data =>{
         const senderSession = socket.request.session;
         const senderSessionId = senderSession.id;
-        const userId = socket.id;
-        const userName = users[userId];
+
+        const userId = data.userId;
+        const user = User.findOne({userId: userId});
+        var userInfo = null;
+        
+        if(user){
+            userInfo = {
+                userId: userId,
+                username: user.name,
+                createdAt: user.createdAt,
+                hasAvatar: user.hasAvatar
+            };
+        }
 
         postLog(`Broadcasting image to clients`);
-        socket.broadcast.emit("broadcastSendChatImage", {userId: userId, userName: userName, imageDataUrl: data.imageDataUrl, senderSessionId: senderSessionId});
+        socket.broadcast.emit("broadcastSendChatImage", {imageDataUrl: data.imageDataUrl, userInfo: user, senderSessionId: senderSessionId});
     })
 
     .on("newUser", userName => {

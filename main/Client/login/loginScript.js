@@ -7,7 +7,7 @@ const loginButton = document.getElementById("loginButton");
 const registerButton = document.getElementById("registerButton");
 
 returnButton.addEventListener("click", () => {
-    window.location.href = "http://localhost:3000";
+    window.location.href = "http://localhost:3000/chatroom";
 })
 
 registerButton.addEventListener("click", () => {
@@ -27,7 +27,7 @@ registerButton.addEventListener("click", () => {
             postLog("Is successful");
             attemptLogin(name, password)
             .then(data => {
-                window.location.href = "http://localhost:3000";
+                window.location.href = "http://localhost:3000/chatroom";
             });
         }
     });
@@ -49,7 +49,7 @@ loginButton.addEventListener("click", () => {
         if (data.successful) {
             
             postLog(`User "${name}" logged in`);
-            window.location.href = "http://localhost:3000";
+            window.location.href = "http://localhost:3000/chatroom";
         }
         else{
             alert("Wrong name or password");
@@ -93,7 +93,7 @@ function attemptLogin(name, password){
 
     postLog(`Sending login request: Name: ${name}, Password: ${password}`);
 
-    return fetch(`http://localhost:3000/login`, {
+    return fetch(`http://localhost:3000/loginRequest`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

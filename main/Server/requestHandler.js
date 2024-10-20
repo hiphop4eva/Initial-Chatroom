@@ -2,10 +2,66 @@ const express = require("express");
 const bycrypt = require("bcrypt");
 const User = require("./models");
 const session = require("express-session");
+const crypto = require("crypto");
+const { join } = require("path");
 
 let mongoPassword = null;
 
 const requestHandler = {
+    
+    handleIndexPage: (req, res) => {
+        postLog("Index page requested");
+        res.status(200).sendFile(join(__dirname, "../Client/chatroom/index.html"));
+    },
+
+    handlePageFile: (req, res) => {
+        postLog("Page script requested");
+        res.status(200).sendFile(join(__dirname, "../Client/chatroom/page.js"));
+    },
+
+    handlePrerequisitesFile: (req, res) => {
+        postLog("Prerequisites script requested");
+        res.status(200).sendFile(join(__dirname, "../Client/chatroom/prerequisites.js"));
+    },
+
+    handleScriptFile: (req, res) => {
+        postLog("Chatroom script requested");
+        res.status(200).sendFile(join(__dirname, "../Client/chatroom/script.js"));
+    },
+
+    handleLoginPage: (req, res) => {
+        postLog("Login page requested");
+        res.status(200).sendFile(join(__dirname, "../Client/login/login.html"));
+    },
+
+    handleLoginScriptFile: (req, res) => {
+        postLog("Login script requested");
+        res.status(200).sendFile(join(__dirname, "../Client/login/loginScript.js"));
+    },
+    
+    handleUserPage: (req, res) => {
+        postLog("User page requested");
+        res.status(200).sendFile(join(__dirname, "../Client/userPage/userPage.html"));
+    },
+
+    handleUserPageScriptFile: (req, res) => {
+        postLog("User page script requested");
+        res.status(200).sendFile(join(__dirname, "../Client/userPage/userPageScript.js"));
+    },
+
+    handleFindUserWithId: async (req, res) => {
+        const userId = req.body.userId
+    
+        const user = await User.findOne({userId: userId});
+    
+        if(user) {
+            res.status(200).json(user);
+        }
+        else {
+            res.status(404).json({message: "User not found"});
+        }
+    },
+
     handleRegister: async (req, res) => {
         const name = req.body.name;
         const password = req.body.password;
@@ -25,9 +81,11 @@ const requestHandler = {
         const salt = bycrypt.genSaltSync(10);
         const hash = bycrypt.hashSync(password, salt);
 
-        postLog(`Hash is ${hash}`)
+        const userIdBuffer = crypto.randomBytes(8);
+        const userId = userIdBuffer.toString("hex");
 
         const user = new User({
+            userId: userId,
             name: name,
             password: hash
         });
@@ -36,7 +94,24 @@ const requestHandler = {
             await user.save().then(() => postLog(`New user ${name} created`));
         }
         catch (err) {
-            console.log(err);
+            if(err.code === 11000){
+                const newUserIdBuffer = crypto.randomBytes(8);
+                const newUserId = newUserIdBuffer.toString("hex");
+
+                user.user_id = newUserId;
+
+                try{
+                    await user.save().then(() => postLog(`New user ${name} created`));
+                }
+                catch (err) {
+                    postLog(`Duplicate user id twice in a row`, true);
+                    throw new Error(err);
+                }
+            }
+
+            else{
+                console.log(err);
+            }
         }
 
         response = {
@@ -49,7 +124,7 @@ const requestHandler = {
         res.json(response);
     },
 
-    handleLogin: async (req, res) => {
+    handleLoginRequest: async (req, res) => {
         const name = req.body.name;
         const password = req.body.password;
         notFound = false;
@@ -91,7 +166,7 @@ const requestHandler = {
             }
 
             req.session.isAuth = true;
-            req.session.userId = user._id;
+            req.session.userId = user.userId;
             req.session.username = user.name;
             
             res.status(200);
@@ -149,9 +224,25 @@ const requestHandler = {
     initRoutes: (app) => {
         mongoPassword = process.env.MONGO_PASSWORD;
 
+        app.get("/chatroom", requestHandler.handleIndexPage);
+        app.get("/index.html", requestHandler.handleIndexPage);
+        app.get("/page.js", requestHandler.handlePageFile);
+        app.get("/prerequisites.js", requestHandler.handlePrerequisitesFile);
+        app.get("/script.js", requestHandler.handleScriptFile);
+
+        app.get("/login", requestHandler.handleLoginPage);
+        app.get("/login.html", requestHandler.handleLoginPage);
+        app.get("/loginScript.js", requestHandler.handleLoginScriptFile);
+        
+        app.get("/user", requestHandler.handleUserPage);
+        app.get("/userPage.html", requestHandler.handleUserPage);
+        app.get("/userPageScript.js", requestHandler.handleUserPageScriptFile);
+
+        app.post("/findUserWithId", requestHandler.handleFindUserWithId);
+
         app.post("/register", requestHandler.handleRegister);
         
-        app.post("/login", requestHandler.handleLogin);
+        app.post("/loginRequest", requestHandler.handleLoginRequest);
 
         app.get("/session", requestHandler.handleGetSession);
         app.post("/session", requestHandler.handlePostSession);
